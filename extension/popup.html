@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 280px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      background: #fff;
+      color: #111;
+    }
+    .header {
+      background: #1D9E75;
+      color: white;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .title { font-weight: 600; font-size: 14px; }
+    .subtitle { font-size: 11px; opacity: 0.8; }
+    .body { padding: 14px 16px; }
+    .status-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px;
+      background: #F9FAFB; margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: #1D9E75; }
+    .dot-gray  { background: #D1D5DB; }
+    .dot-yellow { background: #EF9F27; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .portals { margin-bottom: 12px; }
+    .portal-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 0; border-bottom: 1px solid #F3F4F6;
+    }
+    .portal-row:last-child { border: none; }
+    .portal-name { color: #374151; }
+    .active { color: #1D9E75; font-size: 11px; font-weight: 500; }
+    .inactive { color: #9CA3AF; font-size: 11px; }
+    .btn {
+      width: 100%; padding: 9px;
+      border-radius: 8px; border: none;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: #1D9E75; color: white; margin-bottom: 6px; }
+    .btn-secondary { background: #F3F4F6; color: #374151; }
+    .connect-section { text-align: center; padding: 16px 0; }
+    .connect-section p { color: #6B7280; font-size: 12px; margin-bottom: 10px; line-height: 1.5; }
+    .input {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid #E5E7EB; border-radius: 8px;
+      font-size: 12px; margin-bottom: 8px;
+      outline: none;
+    }
+    .input:focus { border-color: #1D9E75; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+    .stat-card { background: #F9FAFB; border-radius: 8px; padding: 8px 10px; text-align: center; }
+    .stat-val { font-size: 18px; font-weight: 600; color: #111; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 10px; color: #9CA3AF; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">J</div>
+    <div>
+      <div class="title">JobOS</div>
+      <div class="subtitle">Auto-Apply Extension</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div id="connected-view" style="display:none">
+      <div class="status-row">
+        <div class="dot dot-green" id="status-dot"></div>
+        <span id="status-text">Connected · scanning every 30 min</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-applied">—</div>
+          <div class="stat-label">Applied today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-total">—</div>
+          <div class="stat-label">Total applied</div>
+        </div>
+      </div>
+
+      <div class="portals" id="portal-list"></div>
+
+      <button class="btn btn-primary" id="scan-btn">Scan for jobs now</button>
+      <button class="btn btn-secondary" id="dashboard-btn">Open dashboard</button>
+    </div>
+
+    <div id="disconnected-view">
+      <div class="connect-section">
+        <p>Connect JobOS to start auto-applying. Paste your token from the dashboard.</p>
+        <input type="password" class="input" id="token-input" placeholder="Paste token from dashboard →  Automation" />
+        <button class="btn btn-primary" id="connect-btn">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DASHBOARD = 'https://your-app.vercel.app'
+
+    async function init() {
+      const status = await chrome.runtime.sendMessage({ type: 'get-status' })
+      if (status.connected) {
+        showConnected()
+        loadStats()
+        loadPortalHealth()
+      } else {
+        document.getElementById('disconnected-view').style.display = 'block'
+      }
+    }
+
+    function showConnected() {
+      document.getElementById('connected-view').style.display = 'block'
+      document.getElementById('disconnected-view').style.display = 'none'
+    }
+
+    async function loadStats() {
+      const { token } = await chrome.storage.local.get('token')
+      try {
+        const res = await fetch(`${DASHBOARD}/api/stats/today`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const data = await res.json()
+        document.getElementById('stat-applied').textContent = data.today || '0'
+        document.getElementById('stat-total').textContent = data.total || '0'
+      } catch {}
+    }
+
+    async function loadPortalHealth() {
+      const { token } = await chrome.storage.local.get('token')
+      try {
+        const res = await fetch(`${DASHBOARD}/api/portal/health`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const data = await res.json()
+        const list = document.getElementById('portal-list')
+        const portals = [
+          { key: 'linkedin', name: 'LinkedIn' },
+          { key: 'naukri', name: 'Naukri' },
+          { key: 'indeed', name: 'Indeed' },
+          { key: 'glassdoor', name: 'Glassdoor' },
+        ]
+        list.innerHTML = portals.map(p => `
+          <div class="portal-row">
+            <span class="portal-name">${p.name}</span>
+            <span class="${data[p.key] ? 'active' : 'inactive'}">
+              ${data[p.key] ? '● Active' : '○ Not logged in'}
+            </span>
+          </div>
+        `).join('')
+      } catch {}
+    }
+
+    document.getElementById('connect-btn')?.addEventListener('click', async () => {
+      const token = document.getElementById('token-input').value.trim()
+      if (!token) return
+      await chrome.runtime.sendMessage({ type: 'save-token', token })
+      showConnected()
+      loadStats()
+      loadPortalHealth()
+    })
+
+    document.getElementById('scan-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('scan-btn')
+      btn.textContent = 'Scanning...'
+      btn.disabled = true
+      await chrome.runtime.sendMessage({ type: 'manual-scan' })
+      btn.textContent = 'Done!'
+      setTimeout(() => { btn.textContent = 'Scan for jobs now'; btn.disabled = false }, 2000)
+    })
+
+    document.getElementById('dashboard-btn')?.addEventListener('click', () => {
+      chrome.tabs.create({ url: DASHBOARD })
+    })
+
+    init()
+  </script>
+</body>
+</html>

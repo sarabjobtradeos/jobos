@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "JobOS Auto-Apply",
+  "version": "1.0.0",
+  "description": "Automatically applies to jobs on LinkedIn, Naukri, Indeed and Glassdoor on your behalf",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "https://www.naukri.com/*",
+    "https://in.indeed.com/*",
+    "https://ie.indeed.com/*",
+    "https://www.indeed.com/*",
+    "https://www.glassdoor.com/*",
+    "https://www.glassdoor.co.in/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/jobs/*"],
+      "js": ["content/linkedin.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.naukri.com/*"],
+      "js": ["content/naukri.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.indeed.com/viewjob*", "https://*.indeed.com/jobs*"],
+      "js": ["content/indeed.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

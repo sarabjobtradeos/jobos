@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/jobs/scan",
+      "schedule": "0 7 * * *",
+      "comment": "Daily job scan at 7am UTC"
+    },
+    {
+      "path": "/api/followups/auto",
+      "schedule": "0 9 * * *",
+      "comment": "Flag overdue follow-ups at 9am UTC"
+    },
+    {
+      "path": "/api/reports/weekly",
+      "schedule": "0 8 * * 1",
+      "comment": "Weekly report every Monday 8am UTC"
+    },
+    {
+      "path": "/api/push/send",
+      "schedule": "0 * * * *",
+      "comment": "Push alerts: new high-score jobs + interview reminders, every hour"
+    }
+  ]
+}
