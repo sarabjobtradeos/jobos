@@ -103,6 +103,20 @@ body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+/* Fix active nav item */
+.bg-brand-50 {
+  background-color: #ecfdf5 !important;
+}
+.text-brand-700 {
+  color: #065f46 !important;
+}
+.text-brand-600 {
+  color: #059669 !important;
+}
+
+/* Fix all inputs */
 input, textarea, select {
+  background-color: #ffffff !important;
   color: #111827 !important;
+  caret-color: #111827 !important;
 }
