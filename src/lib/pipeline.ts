@@ -2,10 +2,11 @@ import { createClient } from '@supabase/supabase-js'
 import { LinkedInScraper, NaukriScraper, IndeedScraper, ScrapedJob, deduplicateJobs } from './scrapers'
 import { Profile } from './supabase'
 
-const supabaseAdmin = createClient(
+let _admin: any = null
+function getAdmin() { if (!_admin) _admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+  process.env.SUPABASE_SERVICE_KEY!
+); return _admin; }
 
 // ============================================
 // MAIN PIPELINE ORCHESTRATOR
@@ -17,7 +18,7 @@ export async function runJobPipeline(userId: string): Promise<{
   scored: number
   fallbackUsed: boolean
 }> {
-  const { data: profile } = await supabaseAdmin
+  const { data: profile } = await getAdmin()
     .from('profiles')
     .select('*')
     .eq('id', userId)
@@ -27,7 +28,7 @@ export async function runJobPipeline(userId: string): Promise<{
     throw new Error('Profile incomplete — set target roles first')
   }
 
-  const { data: log } = await supabaseAdmin
+  const { data: log } = await getAdmin()
     .from('automation_logs')
     .insert({ user_id: userId, type: 'job_scan', status: 'running' })
     .select()
@@ -72,7 +73,7 @@ export async function runJobPipeline(userId: string): Promise<{
       }
     }
 
-    await supabaseAdmin
+    await getAdmin()
       .from('automation_logs')
       .update({
         status: 'success',
@@ -91,7 +92,7 @@ export async function runJobPipeline(userId: string): Promise<{
     await scheduleFollowUps(userId)
 
   } catch (err: any) {
-    await supabaseAdmin
+    await getAdmin()
       .from('automation_logs')
       .update({ status: 'failed', error: err.message, completed_at: new Date().toISOString() })
       .eq('id', log?.id)
@@ -214,7 +215,7 @@ async function scoreAndSaveJob(
   userId: string,
   fallbackUsed: boolean
 ): Promise<boolean> {
-  const { data: resumes } = await supabaseAdmin
+  const { data: resumes } = await getAdmin()
     .from('resumes')
     .select('content')
     .eq('user_id', userId)
@@ -274,7 +275,7 @@ async function scoreAndSaveJob(
 
   const freshnessScore = calculateFreshnessScore(job.posted_at)
 
-  const { error } = await supabaseAdmin.from('jobs').insert({
+  const { error } = await getAdmin().from('jobs').insert({
     user_id: userId,
     external_id: job.external_id,
     title: job.title,
@@ -311,7 +312,7 @@ async function scoreAndSaveJob(
 // HELPERS
 // ============================================
 async function getExistingExternalIds(userId: string): Promise<Set<string>> {
-  const { data } = await supabaseAdmin
+  const { data } = await getAdmin()
     .from('jobs')
     .select('external_id')
     .eq('user_id', userId)
@@ -340,7 +341,7 @@ function getCompanyLogo(company: string): string {
 async function scheduleFollowUps(userId: string) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const { data: dueApps } = await supabaseAdmin
+  const { data: dueApps } = await getAdmin()
     .from('applications')
     .select('*')
     .eq('user_id', userId)
@@ -351,7 +352,7 @@ async function scheduleFollowUps(userId: string) {
   if (!dueApps?.length) return
 
   for (const app of dueApps) {
-    await supabaseAdmin
+    await getAdmin()
       .from('applications')
       .update({ next_followup_at: new Date().toISOString() })
       .eq('id', app.id)
