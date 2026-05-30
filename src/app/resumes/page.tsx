@@ -44,12 +44,18 @@ export default function ResumesPage() {
     const text = await file.text()
     const name = uploadName || file.name.replace(/\.[^.]+$/, '')
 
-    // Upload to Supabase Storage
-    const path = `${user.id}/resumes/${Date.now()}_${file.name}`
-    const { data: storageData } = await supabase.storage.from('documents').upload(path, file)
-    const fileUrl = storageData?.path
-      ? supabase.storage.from('documents').getPublicUrl(storageData.path).data.publicUrl
-      : undefined
+    // Upload to Supabase Storage (non-blocking — save to DB regardless)
+    let fileUrl: string | undefined
+    try {
+      const path = `${user.id}/resumes/${Date.now()}_${file.name}`
+      const { data: storageData, error: storageError } = await supabase.storage.from('documents').upload(path, file)
+      if (storageError) console.warn('Storage upload failed, saving content only:', storageError.message)
+      if (storageData?.path) {
+        fileUrl = supabase.storage.from('documents').getPublicUrl(storageData.path).data.publicUrl
+      }
+    } catch (e) {
+      console.warn('Storage error:', e)
+    }
 
     const { error } = await supabase.from('resumes').insert({
       user_id: user.id,
@@ -60,9 +66,10 @@ export default function ResumesPage() {
       file_name: file.name,
       is_base: resumes.filter(r => r.region === uploadRegion && r.is_base).length === 0,
       word_count: text.split(/\s+/).length,
+      version: 1,
     })
 
-    if (error) toast.error('Upload failed')
+    if (error) { console.error('DB insert error:', error); toast.error('Upload failed: ' + error.message) }
     else { toast.success('Resume uploaded!'); load() }
     setUploading(false)
     setShowUpload(false)
