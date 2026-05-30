@@ -1,24 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  )
+}
 
 export async function GET(req: NextRequest) {
-  const cronSecret = req.headers.get('x-vercel-cron-secret')
-  if (cronSecret !== process.env.SCRAPER_SECRET) {
+  const cronSecret = req.headers.get('x-vercel-cron-secret') || req.headers.get('authorization')?.replace('Bearer ', '')
+  if (cronSecret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
-  // Find all applications where follow-up is due
+  const supabaseAdmin = getAdmin()
+
   const { data: dueApps } = await supabaseAdmin
     .from('applications')
     .select('*, job:jobs(title, company), profile:profiles(full_name)')
     .in('status', ['applied', 'viewed'])
     .lte('next_followup_at', new Date().toISOString())
-    .lt('followup_count', 2) // max 2 follow-ups per application
+    .lt('followup_count', 2)
 
   if (!dueApps?.length) {
     return NextResponse.json({ message: 'No follow-ups due', count: 0 })
@@ -27,7 +30,6 @@ export async function GET(req: NextRequest) {
   let drafted = 0
   for (const app of dueApps) {
     try {
-      // Generate follow-up draft via AI
       const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/ai/followup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,7 +43,6 @@ export async function GET(req: NextRequest) {
       })
       const draft = await res.json()
 
-      // Save draft to followups table
       await supabaseAdmin.from('followups').insert({
         user_id: app.user_id,
         application_id: app.id,
@@ -49,7 +50,6 @@ export async function GET(req: NextRequest) {
         status: 'draft',
       })
 
-      // Update next follow-up date (+7 days)
       await supabaseAdmin.from('applications').update({
         next_followup_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       }).eq('id', app.id)
