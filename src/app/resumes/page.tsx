@@ -41,7 +41,14 @@ export default function ResumesPage() {
     if (!user) return
 
     // Read file content
-    const text = await file.text()
+    // For PDFs, store file name only — content extracted server-side
+    // For text/doc files, read as text
+    let text = ''
+    if (file.type === 'application/pdf') {
+      text = `[PDF Resume: ${file.name}]`
+    } else {
+      text = await file.text()
+    }
     const name = uploadName || file.name.replace(/\.[^.]+$/, '')
 
     // Upload to Supabase Storage (non-blocking — save to DB regardless)
