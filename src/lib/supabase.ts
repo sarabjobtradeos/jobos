@@ -38,6 +38,10 @@ export interface Profile {
   ireland_salary_min?: number
   ireland_salary_max?: number
   experience_level?: string
+  experience_min?: number
+  experience_max?: number
+  india_cover_letter?: boolean
+  outside_preference?: boolean
   skills: string[]
   portals: Portal[]
   relocation_open: boolean
@@ -103,6 +107,8 @@ export interface Job {
     urgency: 'high' | 'medium' | 'low'
   }
   is_duplicate?: boolean
+  outside_preference?: boolean
+  freshness_score?: number
   posted_at?: string
   discovered_at: string
   status: JobStatus
