@@ -103,3 +103,6 @@ body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+input, textarea, select {
+  color: #111827 !important;
+}
