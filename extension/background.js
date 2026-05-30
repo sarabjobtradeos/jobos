@@ -1,7 +1,7 @@
 // JobOS Extension — Background Service Worker
 // Polls dashboard for jobs to apply, opens tabs, triggers content scripts
 
-const DASHBOARD_URL = 'https://your-app.vercel.app' // replaced at build time
+const DASHBOARD_URL = 'https://jobos-c40m.onrender.com' // replaced at build time
 const POLL_INTERVAL_MINUTES = 30
 
 // ============================================
