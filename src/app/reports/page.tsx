@@ -142,7 +142,7 @@ export default function ReportsPage() {
                   </div>
 
                   {/* Highlights */}
-                  {parsedReport.highlights?.length > 0 && (
+                  {(parsedReport.highlights ?? []).length > 0 && (
                     <div>
                       <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
                         <CheckCircle2 size={10} className="text-brand-500" /> Highlights
@@ -158,7 +158,7 @@ export default function ReportsPage() {
                   )}
 
                   {/* Recommendations */}
-                  {parsedReport.recommendations?.length > 0 && (
+                  {(parsedReport.recommendations ?? []).length > 0 && (
                     <div>
                       <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
                         <Lightbulb size={10} className="text-india-600" /> Next week — do this

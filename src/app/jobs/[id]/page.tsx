@@ -235,13 +235,13 @@ export default function JobDetailPage() {
                     <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide mb-1">Lead with this</p>
                     <p className="text-sm text-gray-700">{job.jd_intelligence.lead_with}</p>
                   </div>
-                  {job.jd_intelligence.red_flags?.length > 0 && (
+                  {(job.jd_intelligence.red_flags ?? []).length > 0 && (
                     <div className="bg-red-50 rounded-lg p-3">
                       <p className="text-[11px] font-semibold text-red-600 uppercase tracking-wide mb-1 flex items-center gap-1">
                         <AlertTriangle size={10} /> Red flags
                       </p>
                       <ul className="space-y-1">
-                        {job.jd_intelligence.red_flags.map((f, i) => (
+                        {(job.jd_intelligence.red_flags ?? []).map((f, i) => (
                           <li key={i} className="text-sm text-red-700">• {f}</li>
                         ))}
                       </ul>
@@ -252,11 +252,11 @@ export default function JobDetailPage() {
             )}
 
             {/* Skills required */}
-            {job.skills_required?.length > 0 && (
+            {(job.skills_required ?? []).length > 0 && (
               <div className="card p-4">
                 <h2 className="text-sm font-semibold text-gray-800 mb-3">Skills Required</h2>
                 <div className="flex flex-wrap gap-2">
-                  {job.skills_required.map(s => (
+                  {(job.skills_required ?? []).map(s => (
                     <span key={s} className="badge badge-brand">{s}</span>
                   ))}
                 </div>

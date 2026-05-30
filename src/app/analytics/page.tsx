@@ -200,7 +200,7 @@ export default function AnalyticsPage() {
               <div>
                 <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Patterns found</p>
                 <div className="space-y-1">
-                  {analysis.patterns?.map((p: string, i: number) => (
+                  {(analysis.patterns ?? []).map((p: string, i: number) => (
                     <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
                       <AlertCircle size={12} className="text-red-400 mt-0.5 flex-shrink-0" />
                       {p}
@@ -211,7 +211,7 @@ export default function AnalyticsPage() {
               <div>
                 <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Recommendations</p>
                 <div className="space-y-1">
-                  {analysis.recommendations?.map((r: string, i: number) => (
+                  {(analysis.recommendations ?? []).map((r: string, i: number) => (
                     <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
                       <TrendingUp size={12} className="text-brand-500 mt-0.5 flex-shrink-0" />
                       {r}
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
               <div>
                 <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Adjust targeting</p>
                 <div className="space-y-1">
-                  {analysis.targetAdjustments?.map((t: string, i: number) => (
+                  {(analysis.targetAdjustments ?? []).map((t: string, i: number) => (
                     <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
                       <Target size={12} className="text-india-600 mt-0.5 flex-shrink-0" />
                       {t}

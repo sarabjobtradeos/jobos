@@ -181,7 +181,7 @@ export default function CompaniesPage() {
                   </div>
 
                   {/* Company news */}
-                  {(research?.company_news || company.news)?.length > 0 && (
+                  {((research?.company_news || company.news) ?? []).length > 0 && (
                     <div className="space-y-1">
                       {(research?.company_news || company.news).slice(0, 2).map((n: any, i: number) => (
                         <div key={i} className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
