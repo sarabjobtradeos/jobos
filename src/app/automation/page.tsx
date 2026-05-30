@@ -139,9 +139,7 @@ export default function AutomationPage() {
           <p className="text-xs text-gray-500">The extension runs in your browser and applies to jobs through your real logged-in sessions. No passwords stored.</p>
           <div className="flex gap-2">
             <div className="flex-1 input text-xs py-2 text-gray-400 bg-gray-50">Extension not yet installed</div>
-            <button className="btn-brand text-xs px-3 py-2" onClick={() => toast('Extension download coming in Phase 3')}>
-              Download
-            </button>
+            <p className="text-xs text-gray-600">Already installed? Open <strong>chrome://extensions</strong> and check if JobOS extension is listed. If not: enable Developer mode → Load unpacked → select the <strong>extension/</strong> folder from your project files.</p>
           </div>
         </div>
 
