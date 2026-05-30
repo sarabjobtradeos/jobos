@@ -40,29 +40,30 @@ export default function ResumesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Read file content
-    // For PDFs, store file name only — content extracted server-side
-    // For text/doc files, read as text
+    // Extract text from PDF via API
     let text = ''
-    if (file.type === 'application/pdf') {
-      text = `[PDF Resume: ${file.name}]`
-    } else {
-      text = await file.text()
+    try {
+      if (file.type === 'application/pdf') {
+        const fd = new FormData()
+        fd.append('file', file)
+        const parseRes = await fetch('/api/parse-resume', { method: 'POST', body: fd })
+        const parsed = await parseRes.json()
+        text = parsed.text || ''
+      } else {
+        text = await file.text()
+      }
+    } catch (e) {
+      console.warn('Text extraction failed, storing filename only')
+      text = ''
     }
     const name = uploadName || file.name.replace(/\.[^.]+$/, '')
 
-    // Upload to Supabase Storage (non-blocking — save to DB regardless)
-    let fileUrl: string | undefined
-    try {
-      const path = `${user.id}/resumes/${Date.now()}_${file.name}`
-      const { data: storageData, error: storageError } = await supabase.storage.from('documents').upload(path, file)
-      if (storageError) console.warn('Storage upload failed, saving content only:', storageError.message)
-      if (storageData?.path) {
-        fileUrl = supabase.storage.from('documents').getPublicUrl(storageData.path).data.publicUrl
-      }
-    } catch (e) {
-      console.warn('Storage error:', e)
-    }
+    // Upload to Supabase Storage
+    const path = `${user.id}/resumes/${Date.now()}_${file.name}`
+    const { data: storageData } = await supabase.storage.from('documents').upload(path, file)
+    const fileUrl = storageData?.path
+      ? supabase.storage.from('documents').getPublicUrl(storageData.path).data.publicUrl
+      : undefined
 
     const { error } = await supabase.from('resumes').insert({
       user_id: user.id,
@@ -73,10 +74,9 @@ export default function ResumesPage() {
       file_name: file.name,
       is_base: resumes.filter(r => r.region === uploadRegion && r.is_base).length === 0,
       word_count: text.split(/\s+/).length,
-      version: 1,
     })
 
-    if (error) { console.error('DB insert error:', error); toast.error('Upload failed: ' + error.message) }
+    if (error) toast.error('Upload failed')
     else { toast.success('Resume uploaded!'); load() }
     setUploading(false)
     setShowUpload(false)
