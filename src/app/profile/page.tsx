@@ -1,4 +1,5 @@
 'use client'
+import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { supabase } from '@/lib/supabase'
